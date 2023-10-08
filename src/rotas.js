@@ -9,7 +9,11 @@ const {
     extratotransacao,
 } = require("./controladores/transacao");
 
+const { cadastrarUsuario, login } = require("./controladores/usuarios");
+
 const rotas = express();
+rotas.post("/usuario", cadastrarUsuario);
+rotas.post("/login", login);
 
 rotas.get("/categoria", listarcategorias);
 rotas.get("/transacao", listartransacao);
