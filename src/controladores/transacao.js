@@ -48,7 +48,7 @@ const cadastrartransacao = async (req, res) => {
             "insert into transacoes (tipo, descricao, valor, data, categoria_id) values ($1, $2, $3, $4, $5) returning *",
             [tipo, descricao, valor, data, categoria_id]
         );
-        return res.status(201).json(rows[0]);
+        return res.status(201).json(rows);
     } catch (error) {
         return res.status(500).json("Erro interno do servidor");
     }
