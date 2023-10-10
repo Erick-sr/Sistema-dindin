@@ -13,11 +13,17 @@ const listarcategorias = async (req, res) => {
 
 const listartransacao = async (req, res) => {
     try {
-        const { rows } = await pool.query("select * from transacoes");
+        const { rows: transacoes } = await pool.query(
+            "select * from transacoes where usuario_id = $1",
+            [req.usuario.id]
+        );
 
-        return res.json(rows);
+        if (transacoes.rowCount < 1) {
+            return res.status(404).json({ mensage: "transação não existe" });
+        }
+        return res.json(transacoes);
     } catch (error) {
-        return res.status(500).json("Erro interno do servidor");
+        return res.status(500).json("Erro interno do servidor ");
     }
 };
 
@@ -26,17 +32,18 @@ const detalhartransacao = async (req, res) => {
 
     try {
         const { rows, rowCount } = await pool.query(
-            "select * from transacoes where id = $1",
-            [id]
+            "select * from transacoes where id = $1 and usuario_id = $2",
+            [id, req.usuario.id]
         );
-        if (rowCount < 1) {
+        if (rowCount === 0) {
             return res
                 .status(404)
                 .json({ mensagem: "Transação não encontrado" });
         }
+
         return res.json(rows[0]);
     } catch (error) {
-        return res.status(500).json("Erro interno do servidor");
+        return res.status(500).json("Erro interno do servidor aaaa");
     }
 };
 
@@ -45,8 +52,8 @@ const cadastrartransacao = async (req, res) => {
 
     try {
         const { rows } = await pool.query(
-            "insert into transacoes (tipo, descricao, valor, data, categoria_id) values ($1, $2, $3, $4, $5) returning *",
-            [tipo, descricao, valor, data, categoria_id]
+            "insert into transacoes (usuario_id, tipo, descricao, valor, data, categoria_id) values ($1, $2, $3, $4, $5, $6) returning *",
+            [req.usuario.id, tipo, descricao, valor, data, categoria_id]
         );
         return res.status(201).json(rows);
     } catch (error) {
@@ -60,8 +67,8 @@ const atualizartransacao = async (req, res) => {
 
     try {
         const { rows, rowCount } = await pool.query(
-            "select * from transacoes where id = $1",
-            [id]
+            "select * from transacoes where id = $1 and usuario_id = $2",
+            [id, req.usuario.id]
         );
 
         if (rowCount < 1) {
@@ -85,10 +92,12 @@ const excluirtransacao = async (req, res) => {
 
     try {
         const { rows, rowCount } = await pool.query(
-            "select * from transacoes where id = $1",
-            [id]
+            "select * from transacoes where id = $1 and usuario_id = $2",
+            [id, req.usuario.id]
         );
+
         console.log(rows, rowCount);
+
         if (rowCount < 1) {
             return res
                 .status(404)
@@ -105,7 +114,8 @@ const excluirtransacao = async (req, res) => {
 const extratotransacao = async (req, res) => {
     try {
         const { rows } = await pool.query(
-            "select tipo, sum(valor) from transacoes group by tipo"
+            "select tipo, sum(valor) from transacoes where usuario_id = $1 group by tipo ",
+            [req.usuario.id]
         );
 
         const a = {
